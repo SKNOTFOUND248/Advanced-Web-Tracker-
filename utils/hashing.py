@@ -1,10 +1,10 @@
 import hashlib
 
 def generate_hash(content: str) -> str:
-    \"\"\"
+    """
     Generates a SHA256 hash for the given content.
     Returns the hexadecimal digest.
-    \"\"\"
+    """
     if content is None:
         return ""
     

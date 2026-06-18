@@ -19,7 +19,7 @@ class DatabaseManager:
         return cls._instance
 
     def _init_db(self):
-        \"\"\"Initialize the database schema if it doesn't exist.\"\"\"
+        """Initialize the database schema if it doesn't exist."""
         try:
             with sqlite3.connect(DB_PATH) as conn:
                 cursor = conn.cursor()
@@ -77,6 +77,14 @@ class DatabaseManager:
                         similarity_score REAL,
                         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE CASCADE
+                    )
+                ''')
+
+                # Create Settings Table
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS settings (
+                        key TEXT PRIMARY KEY,
+                        value TEXT NOT NULL
                     )
                 ''')
 
@@ -348,3 +356,30 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"Error fetching recent events: {e}")
         return events
+
+    # --- Global Settings ---
+    def get_setting(self, key: str, default: str = "") -> str:
+        try:
+            with sqlite3.connect(DB_PATH) as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT value FROM settings WHERE key=?', (key,))
+                row = cursor.fetchone()
+                if row:
+                    return row[0]
+        except Exception as e:
+            logger.error(f"Error getting setting {key}: {e}")
+        return default
+
+    def set_setting(self, key: str, value: str) -> bool:
+        try:
+            with sqlite3.connect(DB_PATH) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT INTO settings (key, value) VALUES (?, ?)
+                    ON CONFLICT(key) DO UPDATE SET value=excluded.value
+                ''', (key, value))
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error setting {key}: {e}")
+            return False

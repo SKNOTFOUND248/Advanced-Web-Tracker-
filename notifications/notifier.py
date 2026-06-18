@@ -1,12 +1,16 @@
+import os
 from plyer import notification
+import pygame
 from utils.logger import logger
 from config import APP_NAME
+from database.database_manager import DatabaseManager
 
 class Notifier:
+    _pygame_initialized = False
     
     @staticmethod
     def send_notification(title: str, message: str, timeout: int = 10):
-        \"\"\"Sends a desktop notification using plyer.\"\"\"
+        """Sends a desktop notification using plyer."""
         try:
             notification.notify(
                 title=f"{APP_NAME} - {title}",
@@ -22,11 +26,32 @@ class Notifier:
             logger.error(f"Failed to send desktop notification: {e}. Message: {title} - {message}")
 
     @staticmethod
+    def _play_alarm():
+        db = DatabaseManager()
+        play_alarm = db.get_setting("play_alarm_on_change", "1")
+        if play_alarm != "1":
+            return
+            
+        custom_path = db.get_setting("custom_alarm_path", "")
+        if custom_path and os.path.exists(custom_path):
+            try:
+                if not Notifier._pygame_initialized:
+                    pygame.mixer.init()
+                    Notifier._pygame_initialized = True
+                
+                pygame.mixer.music.load(custom_path)
+                pygame.mixer.music.play()
+                logger.info(f"Playing custom alarm: {custom_path}")
+            except Exception as e:
+                logger.error(f"Failed to play custom alarm: {e}")
+
+    @staticmethod
     def notify_change(website_name: str, similarity: float):
         Notifier.send_notification(
             title="Website Updated",
             message=f"{website_name} has changed! Similarity: {similarity*100:.1f}%"
         )
+        Notifier._play_alarm()
 
     @staticmethod
     def notify_keyword(website_name: str, keywords: list):
@@ -35,6 +60,7 @@ class Notifier:
             title="Keyword Alert!",
             message=f"Keywords found on {website_name}: {kw_str}"
         )
+        Notifier._play_alarm()
 
     @staticmethod
     def notify_error(website_name: str, error_msg: str):

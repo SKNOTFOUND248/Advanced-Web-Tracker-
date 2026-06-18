@@ -1,6 +1,8 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from typing import Optional, Dict, Any
+import pygame
+from database.database_manager import DatabaseManager
 
 class AddWebsiteDialog(tk.Toplevel):
     def __init__(self, parent):
@@ -81,14 +83,73 @@ class AddWebsiteDialog(tk.Toplevel):
         self.destroy()
 
 class SettingsDialog(tk.Toplevel):
-    def __init__(self, parent):
+    def __init__(self, parent, db: DatabaseManager):
         super().__init__(parent)
         self.title("Global Settings")
-        self.geometry("300x200")
+        self.geometry("450x250")
         self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
         
-        # Placeholder for global settings if needed later
-        ttk.Label(self, text="Global Settings (Coming Soon)", font=("TkDefaultFont", 12)).pack(pady=50)
-        ttk.Button(self, text="Close", command=self.destroy).pack()
+        self.db = db
+        
+        self.play_alarm_var = tk.BooleanVar(value=True)
+        self.alarm_path_var = tk.StringVar()
+        
+        self._load_settings()
+        self._setup_ui()
+        
+    def _load_settings(self):
+        val = self.db.get_setting("play_alarm_on_change", "1")
+        self.play_alarm_var.set(val == "1")
+        
+        path = self.db.get_setting("custom_alarm_path", "")
+        self.alarm_path_var.set(path)
+
+    def _setup_ui(self):
+        main_frame = ttk.Frame(self, padding="15")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Alarm Checkbox
+        ttk.Checkbutton(main_frame, text="Play alarm when a change or keyword is detected", 
+                        variable=self.play_alarm_var).grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=10)
+
+        # Custom Alarm File
+        ttk.Label(main_frame, text="Custom Alarm (MP3/WAV):").grid(row=1, column=0, sticky=tk.W, pady=5)
+        ttk.Entry(main_frame, textvariable=self.alarm_path_var, width=30).grid(row=1, column=1, padx=5, pady=5)
+        ttk.Button(main_frame, text="Browse...", command=self._browse_alarm).grid(row=1, column=2, pady=5)
+        
+        # Test Alarm
+        ttk.Button(main_frame, text="Test Alarm", command=self._test_alarm).grid(row=2, column=1, sticky=tk.W, pady=5)
+
+        # Buttons
+        btn_frame = ttk.Frame(main_frame)
+        btn_frame.grid(row=3, column=0, columnspan=3, pady=25)
+        ttk.Button(btn_frame, text="Cancel", command=self.destroy).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Save", command=self._on_save).pack(side=tk.LEFT, padx=5)
+
+    def _browse_alarm(self):
+        file_path = filedialog.askopenfilename(
+            title="Select Alarm Audio",
+            filetypes=[("Audio Files", "*.mp3 *.wav *.ogg"), ("All Files", "*.*")]
+        )
+        if file_path:
+            self.alarm_path_var.set(file_path)
+
+    def _test_alarm(self):
+        path = self.alarm_path_var.get()
+        if not path:
+            messagebox.showinfo("Test Alarm", "Please browse and select an audio file first.", parent=self)
+            return
+            
+        try:
+            pygame.mixer.init()
+            pygame.mixer.music.load(path)
+            pygame.mixer.music.play()
+        except Exception as e:
+            messagebox.showerror("Audio Error", f"Could not play audio:\n{e}", parent=self)
+
+    def _on_save(self):
+        self.db.set_setting("play_alarm_on_change", "1" if self.play_alarm_var.get() else "0")
+        self.db.set_setting("custom_alarm_path", self.alarm_path_var.get().strip())
+        self.destroy()

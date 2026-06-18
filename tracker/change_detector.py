@@ -20,14 +20,14 @@ class ChangeDetector:
     
     @staticmethod
     def hash_comparison(old_content: str, new_content: str) -> bool:
-        \"\"\"Fastest check: Compare SHA256 hashes.\"\"\"
+        """Fastest check: Compare SHA256 hashes."""
         if old_content is None or new_content is None:
             return True # Consider None as different
         return generate_hash(old_content) != generate_hash(new_content)
 
     @staticmethod
     def calculate_similarity(old_content: str, new_content: str) -> float:
-        \"\"\"Calculate a similarity score between 0.0 and 1.0 using difflib.\"\"\"
+        """Calculate a similarity score between 0.0 and 1.0 using difflib."""
         if not old_content and not new_content:
             return 1.0
         if not old_content or not new_content:
@@ -40,7 +40,7 @@ class ChangeDetector:
 
     @staticmethod
     def word_diff(old_content: str, new_content: str) -> Tuple[Set[str], Set[str]]:
-        \"\"\"Extract words that were added and removed.\"\"\"
+        """Extract words that were added and removed."""
         if not old_content: old_content = ""
         if not new_content: new_content = ""
         
@@ -54,7 +54,7 @@ class ChangeDetector:
 
     @staticmethod
     def generate_detailed_diff(old_content: str, new_content: str) -> ChangeReport:
-        \"\"\"Generate a full ChangeReport with line-by-line differences.\"\"\"
+        """Generate a full ChangeReport with line-by-line differences."""
         report = ChangeReport(old_content or "", new_content or "")
         
         if not old_content and not new_content:
@@ -77,7 +77,7 @@ class ChangeDetector:
 
     @staticmethod
     def check_keywords(content: str, keywords: List[str]) -> List[str]:
-        \"\"\"Check if any of the monitored keywords appear in the content.\"\"\"
+        """Check if any of the monitored keywords appear in the content."""
         if not content or not keywords:
             return []
             

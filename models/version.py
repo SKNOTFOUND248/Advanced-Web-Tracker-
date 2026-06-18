@@ -15,8 +15,8 @@ class WebsiteVersion:
     previous_version_id: Optional[int] = None
     
     def compare_with_previous(self, previous_version: 'WebsiteVersion'):
-        \"\"\"
+        """
         Compares this version with a previous version.
         Delegates to ChangeDetector in practice, but this is a stub for the model.
-        \"\"\"
+        """
         pass

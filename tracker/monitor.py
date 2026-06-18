@@ -27,7 +27,7 @@ class MonitorService:
         self.jobs: Dict[int, schedule.Job] = {}
 
     def start(self):
-        \"\"\"Starts the background monitoring thread.\"\"\"
+        """Starts the background monitoring thread."""
         if self.running:
             return
             
@@ -39,7 +39,7 @@ class MonitorService:
         logger.info("Monitor service started.")
 
     def stop(self):
-        \"\"\"Stops the background monitoring thread.\"\"\"
+        """Stops the background monitoring thread."""
         self.running = False
         if self.thread:
             self.thread.join(timeout=2.0)
@@ -48,13 +48,13 @@ class MonitorService:
         logger.info("Monitor service stopped.")
 
     def _run_scheduler(self):
-        \"\"\"The main loop for the background thread.\"\"\"
+        """The main loop for the background thread."""
         while self.running:
             schedule.run_pending()
             time.sleep(1)
 
     def schedule_all_active_websites(self):
-        \"\"\"Loads all active websites from DB and schedules them.\"\"\"
+        """Loads all active websites from DB and schedules them."""
         schedule.clear()
         self.jobs.clear()
         websites = self.db.get_websites()
@@ -63,7 +63,7 @@ class MonitorService:
                 self.schedule_website(w)
 
     def schedule_website(self, website: Website):
-        \"\"\"Schedules a single website for monitoring.\"\"\"
+        """Schedules a single website for monitoring."""
         if website.id in self.jobs:
             schedule.cancel_job(self.jobs[website.id])
             
@@ -80,15 +80,15 @@ class MonitorService:
             del self.jobs[website_id]
 
     def trigger_check_now(self, website_id: int):
-        \"\"\"Triggers an immediate check for a website in a separate short-lived thread.\"\"\"
+        """Triggers an immediate check for a website in a separate short-lived thread."""
         t = threading.Thread(target=self.check_website, args=(website_id,), daemon=True)
         t.start()
 
     def check_website(self, website_id: int):
-        \"\"\"
+        """
         The core logic to download, parse, hash, compare, and alert.
         Runs in the background scheduler thread or on demand.
-        \"\"\"
+        """
         # Reload website from DB to get latest settings (e.g. keywords, threshold)
         websites = [w for w in self.db.get_websites() if w.id == website_id]
         if not websites:

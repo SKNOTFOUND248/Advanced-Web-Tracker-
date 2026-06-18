@@ -180,7 +180,7 @@ class MainWindow(tk.Tk):
                 self.status_var.set(f"Added website {w.name}")
 
     def _show_settings(self):
-        SettingsDialog(self)
+        SettingsDialog(self, self.db)
 
     def _check_now(self, website_id: int):
         self.status_var.set(f"Checking website ID {website_id}...")

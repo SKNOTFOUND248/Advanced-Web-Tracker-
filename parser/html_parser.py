@@ -3,16 +3,16 @@ import re
 from utils.logger import logger
 
 class HTMLParser:
-    \"\"\"
+    """
     Parses HTML content to extract visible text and normalize it for comparison.
-    \"\"\"
+    """
     
     @staticmethod
     def extract_text(html_content: str, css_selector: str = None) -> str:
-        \"\"\"
+        """
         Cleans HTML and extracts visible text.
         Optionally restricts extraction to a specific CSS selector.
-        \"\"\"
+        """
         if not html_content:
             return ""
 
